@@ -1,16 +1,404 @@
 #include <GL/glut.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
 
 static int window_width, window_height;
+static int timer_active;
+static int height1;
+static int height2;
+static int height3;
+static int height4;
+static int height5;
+static int height6;
+static int height7;
+static int height8;
+static int height9;
+static int active1;
+static int active2;
+static int active3;
+static int active4;
+static int active5;
+static int active6;
+static int active7;
+static int active8;
+static int active9;
+static int life;
+static int score;
+static int high_score;
+static int level[9];
+static int pointer;
 
 static void on_reshape(int width, int height){
 	window_width = width;
 	window_height = height;
 }
 
+static void on_timer(int value){
+	if(value != 0)
+		return;
+	
+	if(life <= 0){
+		int i;
+		for(i=0; i<5; i++)
+			printf("\n");
+		printf("Igra je zavrsena!\n");
+		printf("HIGH SCORE: %d\n", high_score);
+		printf("POINTER: %d\n", pointer);
+		exit(0);
+	}
+	
+	if(score > (pointer+1)*10 && pointer != 6)
+		pointer++;
+	
+	time_t t;
+	srand((unsigned) time(&t));
+	
+	int num = rand();
+	num = num % 9;
+	
+	while( (num == 0 && active1 == 1) || (num == 1 && active2 == 1) ||
+		(num == 2 && active3 == 1) || (num == 3 && active4 == 1) ||
+		(num == 4 && active5 == 1) || (num == 5 && active6 == 1) ||
+		(num == 6 && active7 == 1) || (num == 7 && active8 == 1) ||
+		(num == 8 && active9 == 1) ){
+			num = rand();
+			num = num % 9;
+	}
+	
+	if(active1)
+		height1++;
+	if(active2)
+		height2++;
+	if(active3)
+		height3++;
+	if(active4)
+		height4++;
+	if(active5)
+		height5++;
+	if(active6)
+		height6++;
+	if(active7)
+		height7++;
+	if(active8)
+		height8++;
+	if(active9)
+		height9++;
+	
+	if(num == 0 && active1 == 0){
+		height1++;
+		active1 = 1;
+	}
+	else if(num == 1 && active2 == 0){
+		height2++;
+		active2 = 1;
+	}
+	else if(num == 2 && active3 == 0){
+		height3++;
+		active3 = 1;
+	}
+	else if(num == 3 && active4 == 0){
+		height4++;
+		active4 = 1;
+	}
+	else if(num == 4 && active5 == 0){
+		height5++;
+		active5 = 1;
+	}
+	else if(num == 5 && active6 == 0){
+		height6++;
+		active6 = 1;
+	}
+	else if(num == 6 && active7 == 0){
+		height7++;
+		active7 = 1;
+	}
+	else if(num == 7 && active8 == 0){
+		height8++;
+		active8 = 1;
+	}
+	else if(num == 8 && active1 == 9){
+		height9++;
+		active9 = 1;
+	}
+		
+	if(height1 == 6){
+		height1 = 0;
+		active1 = 0;
+		life--;
+		if(score > high_score)
+			high_score = score;
+		score = 0;
+		pointer = 0;
+		printf("Broj zivota: %d\n", life);
+	}
+	if(height2 == 6){
+		height2 = 0;
+		active2 = 0;
+		life--;
+		if(score > high_score)
+			high_score = score;
+		score = 0;
+		pointer = 0;
+		printf("Broj zivota: %d\n", life);
+	}
+	if(height3 == 6){
+		height3 = 0;
+		active3 = 0;
+		life--;
+		if(score > high_score)
+			high_score = score;
+		score = 0;
+		pointer = 0;
+		printf("Broj zivota: %d\n", life);
+	}
+	if(height4 == 6){
+		height4 = 0;
+		active4 = 0;
+		life--;
+		if(score > high_score)
+			high_score = score;
+		score = 0;
+		pointer = 0;
+		printf("Broj zivota: %d\n", life);
+	}
+	if(height5 == 6){
+		height5 = 0;
+		active5 = 0;
+		life--;
+		if(score > high_score)
+			high_score = score;
+		score = 0;
+		pointer = 0;
+		printf("Broj zivota: %d\n", life);
+	}
+	if(height6 == 6){
+		height6 = 0;
+		active6 = 0;
+		life--;
+		if(score > high_score)
+			high_score = score;
+		score = 0;
+		pointer = 0;
+		printf("Broj zivota: %d\n", life);
+	}
+	if(height7 == 6){
+		height7 = 0;
+		active7 = 0;
+		life--;
+		if(score > high_score)
+			high_score = score;
+		score = 0;
+		pointer = 0;
+		printf("Broj zivota: %d\n", life);
+	}
+	if(height8 == 6){
+		height8 = 0;
+		active8 = 0;
+		life--;
+		if(score > high_score)
+			high_score = score;
+		score = 0;
+		pointer = 0;
+		printf("Broj zivota: %d\n", life);
+	}
+	if(height9 == 6){
+		height9 = 0;
+		active9 = 0;
+		life--;
+		if(score > high_score)
+			high_score = score;
+		score = 0;
+		pointer = 0;
+		printf("Broj zivota: %d\n", life);
+	}
+	
+	if(life <= 0){
+		int i;
+		for(i=0; i<5; i++)
+			printf("\n");
+		printf("Igra je zavrsena!\n");
+		printf("HIGH SCORE: %d\n", high_score);
+		printf("POINTER: %d\n", pointer);
+		exit(0);
+	}
+	
+	glutPostRedisplay();
+	
+	if(timer_active)
+		glutTimerFunc(level[pointer], on_timer, 0);
+}
+
 static void on_keyboard(unsigned char key, int x, int y){
 	switch(key){
 		case 27:
 			exit(0);
+			break;
+		case 's':
+		case 'S':
+			if(!timer_active){
+				timer_active = 1;
+				glutTimerFunc(level[pointer], on_timer, 0);
+			}
+			glutPostRedisplay();
+			break;
+		case 'p':
+		case 'P':
+			timer_active = 0;
+			glutPostRedisplay();
+			break;
+		case '1':
+			height1 = 0;
+			if(active1 == 0){
+				life--;
+				printf("Broj zivota: %d\n", life);
+				if(score > high_score)
+					high_score = score;
+				score = 0;
+				pointer = 0;
+			}
+			else{
+				score++;
+				printf("SCORE: %d\n",score);
+			}
+			active1 = 0;
+			glutPostRedisplay();
+			break;
+		case '2':
+			height2 = 0;
+			if(active2 == 0){
+				life--;
+				printf("Broj zivota: %d\n", life);
+				if(score > high_score)
+					high_score = score;
+				score = 0;
+				pointer = 0;
+			}
+			else{
+				score++;
+				printf("SCORE: %d\n",score);
+			}
+			active2 = 0;
+			glutPostRedisplay();
+			break;
+		case '3':
+			height3 = 0;
+			if(active3 == 0){
+				life--;
+				printf("Broj zivota: %d\n", life);
+				if(score > high_score)
+					high_score = score;
+				score = 0;
+				pointer = 0;
+			}
+			else{
+				score++;
+				printf("SCORE: %d\n",score);
+			}
+			active3 = 0;
+			glutPostRedisplay();
+			break;
+		case '4':
+			height4 = 0;
+			if(active4 == 0){
+				life--;
+				printf("Broj zivota: %d\n", life);
+				if(score > high_score)
+					high_score = score;
+				score = 0;
+				pointer = 0;
+			}
+			else{
+				score++;
+				printf("SCORE: %d\n",score);
+			}
+			active4 = 0;
+			glutPostRedisplay();
+			break;
+		case '5':
+			height5 = 0;
+			if(active5 == 0){
+				life--;
+				printf("Broj zivota: %d\n", life);
+				if(score > high_score)
+					high_score = score;
+				score = 0;
+				pointer = 0;
+			}
+			else{
+				score++;
+				printf("SCORE: %d\n",score);
+			}
+			active5 = 0;
+			glutPostRedisplay();
+			break;
+		case '6':
+			height6 = 0;
+			if(active6 == 0){
+				life--;
+				printf("Broj zivota: %d\n", life);
+				if(score > high_score)
+					high_score = score;
+				score = 0;
+				pointer = 0;
+			}
+			else{
+				score++;
+				printf("SCORE: %d\n",score);
+			}
+			active6 = 0;
+			glutPostRedisplay();
+			break;
+		case '7':
+			height7 = 0;
+			if(active7 == 0){
+				life--;
+				printf("Broj zivota: %d\n", life);
+				if(score > high_score)
+					high_score = score;
+				score = 0;
+				pointer = 0;
+			}
+			else{
+				score++;
+				printf("SCORE: %d\n",score);
+			}
+			active7 = 0;
+			glutPostRedisplay();
+			break;
+		case '8':
+			height8 = 0;
+			if(active8 == 0){
+				life--;
+				printf("Broj zivota: %d\n", life);
+				if(score > high_score)
+					high_score = score;
+				score = 0;
+				pointer = 0;
+			}
+			else{
+				score++;
+				printf("SCORE: %d\n",score);
+			}
+			active8 = 0;
+			glutPostRedisplay();
+			break;
+		case '9':
+			height9 = 0;
+			if(active9 == 0){
+				life--;
+				printf("Broj zivota: %d\n", life);
+				if(score > high_score)
+					high_score = score;
+				score = 0;
+				pointer = 0;
+			}
+			else{
+				score++;
+				printf("SCORE: %d\n",score);
+			}
+			active9 = 0;
+			glutPostRedisplay();
 			break;
 	}
 }
@@ -45,12 +433,12 @@ static void on_display(void){
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     gluLookAt(
-		10, 28, 22,
+		5, 20, 15,
 		5, 0, 5,
 		0, 1, 0
     );
 	
-	glColor3f(0, 1, 0);
+	/*glColor3f(0, 1, 0);
 	glBegin(GL_LINES);
 		glVertex3f(0, 0, 0);
 		glVertex3f(20, 0, 0);
@@ -64,7 +452,13 @@ static void on_display(void){
 	glBegin(GL_LINES);
 		glVertex3f(0, 0, 0);
 		glVertex3f(0, 0, 20);
-	glEnd();
+	glEnd();*/
+	
+	GLfloat ambient_coeffs0[] = { 0.3, 0.3, 0.3, 1 };
+    GLfloat diffuse_coeffs0[] = { 0.3, 0.3, 0.3, 1 };
+    
+    glMaterialfv(GL_FRONT, GL_AMBIENT, ambient_coeffs0);
+    glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuse_coeffs0);
 	
 	glColor3f(1, 0, 0);
 	glBegin(GL_POLYGON);
@@ -83,19 +477,19 @@ static void on_display(void){
     glColor3f(0, 0, 1);
     glPushMatrix();
 		glTranslatef(1, 3, 1);
-		glScalef(1, 3, 1);
+		glScalef(1, height7+3, 1);
 		glutSolidCube(2);
     glPopMatrix();
     
     glPushMatrix();
 		glTranslatef(5, 3, 1);
-		glScalef(1, 3, 1);
+		glScalef(1, height8+3, 1);
 		glutSolidCube(2);
 	glPopMatrix();
     
     glPushMatrix();
 		glTranslatef(9, 3, 1);
-		glScalef(1, 3, 1);
+		glScalef(1, height9+3, 1);
 		glutSolidCube(2);
 	glPopMatrix();
 	
@@ -108,19 +502,19 @@ static void on_display(void){
     glColor3f(0, 1, 1);
     glPushMatrix();
 		glTranslatef(1, 3, 5);
-		glScalef(1, 3, 1);
+		glScalef(1, height4+3, 1);
 		glutSolidCube(2);
     glPopMatrix();
     
     glPushMatrix();
 		glTranslatef(5, 3, 5);
-		glScalef(1, 3, 1);
+		glScalef(1, height5+3, 1);
 		glutSolidCube(2);
     glPopMatrix();
     
     glPushMatrix();
 		glTranslatef(9, 3, 5);
-		glScalef(1, 3, 1);
+		glScalef(1, height6+3, 1);
 		glutSolidCube(2);
     glPopMatrix();
 	
@@ -133,19 +527,19 @@ static void on_display(void){
 	glColor3f(1, 1, 0);
 	glPushMatrix();
 		glTranslatef(1, 3, 9);
-		glScalef(1, 3, 1);
+		glScalef(1, height1+3, 1);
 		glutSolidCube(2);
     glPopMatrix();
 	
 	glPushMatrix();
 		glTranslatef(5, 3, 9);
-		glScalef(1, 3, 1);
+		glScalef(1, height2+3, 1);
 		glutSolidCube(2);
     glPopMatrix();
     
     glPushMatrix();
 		glTranslatef(9, 3, 9);
-		glScalef(1, 3, 1);
+		glScalef(1, height3+3, 1);
 		glutSolidCube(2);
     glPopMatrix();
     
@@ -159,13 +553,38 @@ int main(int argc, char** argv){
 	glutInitWindowPosition(100,100);
 	glutCreateWindow(argv[0]);
 	
+	timer_active = 0;
+	height1 = 0;
+	height2 = 0;
+	height3 = 0;
+	height4 = 0;
+	height5 = 0;
+	height6 = 0;
+	height7 = 0;
+	height8 = 0;
+	height9 = 0;
+	score = 0;
+	high_score = 0;
+	pointer = 0;
+	level[0] = 1200;
+	level[1] = 900;
+	level[2] = 750;
+	level[3] = 650;
+	level[4] = 550;
+	level[5] = 450;
+	level[6] = 350;
+	level[7] = 300;
+	level[8] = 250;
+	
 	glutDisplayFunc(on_display);
 	glutReshapeFunc(on_reshape);
 	glutKeyboardFunc(on_keyboard);
 	glClearColor(0, 0, 0, 0);
 	glEnable(GL_DEPTH_TEST);
 	glLineWidth(3);
-		
+	life = 3;
+	printf("Lives remaining: %d\n",life);
+	printf("SCORE: %d\n",score);
 	glutMainLoop();
 	return 0;
 }

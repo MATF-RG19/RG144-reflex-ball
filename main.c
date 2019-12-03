@@ -2,6 +2,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <math.h>
+//#include <windows.h>
+//#include <windowsx.h>
+//#include <mmsystem.h>
+
+#define pi M_PI
 
 static int window_width, window_height;
 static int timer_active;
@@ -26,17 +32,40 @@ static int active9;
 static int life;
 static int score;
 static int high_score;
-static int level[9];
+static int level[7];
 static int pointer;
+static float theta;
+static float delta_theta;
+static int timer_rotate1_active;
+static int timer_rotate2_active;
+static int first_rotate_active;
 
 static void on_reshape(int width, int height){
 	window_width = width;
 	window_height = height;
 }
 
+static void on_timer_rotate(int value){
+	if(value != 0)
+		return;
+	if(timer_rotate1_active)
+		theta += delta_theta;
+	else if(timer_rotate2_active)
+		theta -= delta_theta;
+	glutPostRedisplay();
+	if(timer_rotate1_active == 1 || timer_rotate2_active == 1)
+		glutTimerFunc(50, on_timer_rotate, 0);
+}
+
 static void on_timer(int value){
 	if(value != 0)
 		return;
+		
+	time_t t;
+	srand((unsigned) time(&t));
+	
+	int switcher = rand();
+	switcher = switcher % 2;
 	
 	if(life <= 0){
 		int i;
@@ -51,8 +80,20 @@ static void on_timer(int value){
 	if(score > (pointer+1)*10 && pointer != 6)
 		pointer++;
 	
-	time_t t;
-	srand((unsigned) time(&t));
+	if(pointer >= 1 && first_rotate_active == 0){
+		timer_rotate1_active = 1;
+		first_rotate_active = 1;
+		glutTimerFunc(50, on_timer_rotate, 0);
+	}
+	
+	if(timer_rotate1_active && switcher == 0){
+		timer_rotate1_active = 0;
+		timer_rotate2_active = 1;
+	}
+	else if(timer_rotate2_active && switcher == 0){
+		timer_rotate1_active = 1;
+		timer_rotate2_active = 0;
+	}
 	
 	int num = rand();
 	num = num % 9;
@@ -128,8 +169,8 @@ static void on_timer(int value){
 		life--;
 		if(score > high_score)
 			high_score = score;
-		score = 0;
-		pointer = 0;
+		score -= 10;
+		pointer--;
 		printf("Broj zivota: %d\n", life);
 	}
 	if(height2 == 6){
@@ -138,8 +179,8 @@ static void on_timer(int value){
 		life--;
 		if(score > high_score)
 			high_score = score;
-		score = 0;
-		pointer = 0;
+		score -= 10;
+		pointer--;
 		printf("Broj zivota: %d\n", life);
 	}
 	if(height3 == 6){
@@ -148,8 +189,8 @@ static void on_timer(int value){
 		life--;
 		if(score > high_score)
 			high_score = score;
-		score = 0;
-		pointer = 0;
+		score -= 10;
+		pointer--;
 		printf("Broj zivota: %d\n", life);
 	}
 	if(height4 == 6){
@@ -158,8 +199,8 @@ static void on_timer(int value){
 		life--;
 		if(score > high_score)
 			high_score = score;
-		score = 0;
-		pointer = 0;
+		score -= 10;
+		pointer--;
 		printf("Broj zivota: %d\n", life);
 	}
 	if(height5 == 6){
@@ -168,8 +209,8 @@ static void on_timer(int value){
 		life--;
 		if(score > high_score)
 			high_score = score;
-		score = 0;
-		pointer = 0;
+		score -= 10;
+		pointer--;
 		printf("Broj zivota: %d\n", life);
 	}
 	if(height6 == 6){
@@ -178,8 +219,8 @@ static void on_timer(int value){
 		life--;
 		if(score > high_score)
 			high_score = score;
-		score = 0;
-		pointer = 0;
+		score -= 10;
+		pointer--;
 		printf("Broj zivota: %d\n", life);
 	}
 	if(height7 == 6){
@@ -188,8 +229,8 @@ static void on_timer(int value){
 		life--;
 		if(score > high_score)
 			high_score = score;
-		score = 0;
-		pointer = 0;
+		score -= 10;
+		pointer--;
 		printf("Broj zivota: %d\n", life);
 	}
 	if(height8 == 6){
@@ -198,8 +239,8 @@ static void on_timer(int value){
 		life--;
 		if(score > high_score)
 			high_score = score;
-		score = 0;
-		pointer = 0;
+		score -= 10;
+		pointer--;
 		printf("Broj zivota: %d\n", life);
 	}
 	if(height9 == 6){
@@ -208,8 +249,8 @@ static void on_timer(int value){
 		life--;
 		if(score > high_score)
 			high_score = score;
-		score = 0;
-		pointer = 0;
+		score -= 10;
+		pointer--;
 		printf("Broj zivota: %d\n", life);
 	}
 	
@@ -254,8 +295,8 @@ static void on_keyboard(unsigned char key, int x, int y){
 				printf("Broj zivota: %d\n", life);
 				if(score > high_score)
 					high_score = score;
-				score = 0;
-				pointer = 0;
+				score -= 10;
+				pointer--;
 			}
 			else{
 				score++;
@@ -271,8 +312,8 @@ static void on_keyboard(unsigned char key, int x, int y){
 				printf("Broj zivota: %d\n", life);
 				if(score > high_score)
 					high_score = score;
-				score = 0;
-				pointer = 0;
+				score -= 10;
+				pointer--;
 			}
 			else{
 				score++;
@@ -288,8 +329,8 @@ static void on_keyboard(unsigned char key, int x, int y){
 				printf("Broj zivota: %d\n", life);
 				if(score > high_score)
 					high_score = score;
-				score = 0;
-				pointer = 0;
+				score -= 10;
+				pointer--;
 			}
 			else{
 				score++;
@@ -305,8 +346,8 @@ static void on_keyboard(unsigned char key, int x, int y){
 				printf("Broj zivota: %d\n", life);
 				if(score > high_score)
 					high_score = score;
-				score = 0;
-				pointer = 0;
+				score -= 10;
+				pointer--;
 			}
 			else{
 				score++;
@@ -322,8 +363,8 @@ static void on_keyboard(unsigned char key, int x, int y){
 				printf("Broj zivota: %d\n", life);
 				if(score > high_score)
 					high_score = score;
-				score = 0;
-				pointer = 0;
+				score -= 10;
+				pointer--;
 			}
 			else{
 				score++;
@@ -339,8 +380,8 @@ static void on_keyboard(unsigned char key, int x, int y){
 				printf("Broj zivota: %d\n", life);
 				if(score > high_score)
 					high_score = score;
-				score = 0;
-				pointer = 0;
+				score -= 10;
+				pointer--;
 			}
 			else{
 				score++;
@@ -356,8 +397,8 @@ static void on_keyboard(unsigned char key, int x, int y){
 				printf("Broj zivota: %d\n", life);
 				if(score > high_score)
 					high_score = score;
-				score = 0;
-				pointer = 0;
+				score -= 10;
+				pointer--;
 			}
 			else{
 				score++;
@@ -373,8 +414,8 @@ static void on_keyboard(unsigned char key, int x, int y){
 				printf("Broj zivota: %d\n", life);
 				if(score > high_score)
 					high_score = score;
-				score = 0;
-				pointer = 0;
+				score -= 10;
+				pointer--;
 			}
 			else{
 				score++;
@@ -390,8 +431,8 @@ static void on_keyboard(unsigned char key, int x, int y){
 				printf("Broj zivota: %d\n", life);
 				if(score > high_score)
 					high_score = score;
-				score = 0;
-				pointer = 0;
+				score -= 10;
+				pointer--;
 			}
 			else{
 				score++;
@@ -433,7 +474,7 @@ static void on_display(void){
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     gluLookAt(
-		5, 20, 15,
+		10*sin(theta)+5, 20, 10*cos(theta)+5,
 		5, 0, 5,
 		0, 1, 0
     );
@@ -554,6 +595,9 @@ int main(int argc, char** argv){
 	glutCreateWindow(argv[0]);
 	
 	timer_active = 0;
+	timer_rotate1_active = 0;
+	timer_rotate2_active = 0;
+	first_rotate_active = 0;
 	height1 = 0;
 	height2 = 0;
 	height3 = 0;
@@ -566,15 +610,15 @@ int main(int argc, char** argv){
 	score = 0;
 	high_score = 0;
 	pointer = 0;
-	level[0] = 1200;
-	level[1] = 900;
-	level[2] = 750;
-	level[3] = 650;
-	level[4] = 550;
-	level[5] = 450;
-	level[6] = 350;
-	level[7] = 300;
-	level[8] = 250;
+	theta = 0.0001;
+	delta_theta = pi / 90;
+	level[0] = 2000;
+	level[1] = 1500;
+	level[2] = 1200;
+	level[3] = 1000;
+	level[4] = 800;
+	level[5] = 500;
+	level[6] = 330;
 	
 	glutDisplayFunc(on_display);
 	glutReshapeFunc(on_reshape);

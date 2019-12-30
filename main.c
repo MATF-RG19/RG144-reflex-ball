@@ -52,6 +52,7 @@ static void on_reshape(int width, int height){
 	window_height = height;
 }
 
+//funkcija koja menja highscore.txt fajl u zavisnosti od trenutnog broja poena
 static void highscore(){
 	FILE * fp;
 	fp = fopen ("highscore.txt", "r+");
@@ -67,6 +68,7 @@ static void highscore(){
 	}
 }
 
+//funkcija koja inicijalizuje podatke za teksture
 static void initialize(void){
     Image * image;
 
@@ -137,18 +139,21 @@ static void initialize(void){
     image_done(image);
 }
 
+//funkcija koja iskljucuje teksturu kada se predje na sledeci nivo
 static void on_timer_levelup(int value){
 	if(value != 0)
 		return;
 	levelup = 0;
 }
 
+//funkcija koja iskljucuje teksturu kada se napravi greska
 static void on_timer_mistake(int value){
 	if(value != 0)
 		return;
 	mistake = 0;
 }
 
+//funkcija koja random rotira kameru
 static void on_timer_rotate(int value){
 	if(value != 0)
 		return;
@@ -161,6 +166,7 @@ static void on_timer_rotate(int value){
 		glutTimerFunc(50, on_timer_rotate, 0);
 }
 
+//funkcija za animaciju kamere na pocetku igrice
 static void on_timer_camera(int value){
 	if(value != 0)
 		return;
@@ -179,9 +185,11 @@ static void on_timer(int value){
 	time_t t;
 	srand((unsigned) time(&t));
 	
+	//generisanje pseudoslucajnog broja za menjanje smera rotacije kamere
 	int switcher = rand();
 	switcher = switcher % 2;
 	
+	//kraj igrice kada izgubimo sve zivote
 	if(life <= 0){
 		int i;
 		for(i=0; i<5; i++)
@@ -195,28 +203,34 @@ static void on_timer(int value){
 		exit(0);
 	}
 	
+	//prelazak na sledeci nivo, pointer+1 oznacava trenutni nivo pocevsi od 1
 	if(score > (pointer+1)*10 && pointer != 6){
 		pointer++;
 		levelup = 1;
 		glutPostRedisplay();
 	}
 	
+	//ukljucivanje rotacije kamere posle prvog nivoa
 	if(pointer >= 1 && first_rotate_active == 0){
 		timer_rotate1_active = 1;
 		first_rotate_active = 1;
 		glutTimerFunc(50, on_timer_rotate, 0);
 	}
 	
+	//menjanje teksture kada predjemo na sledeci nivo
 	if(levelup){
 		glutPostRedisplay();
 		glutTimerFunc(500, on_timer_levelup, 0);
 	}
 	
+	//menjanje teksture kada izgubimo zivot
 	if(mistake){
 		glutPostRedisplay();
 		glutTimerFunc(500, on_timer_mistake, 0);
 	}
 	
+	
+	//menjanje smera rotacije kamere
 	if(timer_rotate1_active && switcher == 0){
 		timer_rotate1_active = 0;
 		timer_rotate2_active = 1;
@@ -238,6 +252,7 @@ static void on_timer(int value){
 			num = num % 9;
 	}
 	
+	//podizanje stubova koji su vec u fazi podizanja
 	if(active1)
 		height1++;
 	if(active2)
@@ -257,6 +272,7 @@ static void on_timer(int value){
 	if(active9)
 		height9++;
 	
+	//podizanje novog random stuba
 	if(num == 0 && active1 == 0){
 		height1++;
 		active1 = 1;
@@ -293,7 +309,8 @@ static void on_timer(int value){
 		height9++;
 		active9 = 1;
 	}
-		
+	
+	//provera da li je neki stub dostigao maksimalnu dozvoljenu visinu
 	if(height1 == 6){
 		height1 = 0;
 		active1 = 0;
@@ -441,6 +458,9 @@ static void on_keyboard(unsigned char key, int x, int y){
 			timer_active = 0;
 			glutPostRedisplay();
 			break;
+		//pritiskom na taster se spusta odredjeni stub (uz proveru da li smo pogodili aktivan stub inace
+		//gubimo zivot i proveravamo da li smo izgubili sve zivote, azuriramo high-score, vracamo se jedan nivo
+		//unazad ako smo pogresili, inace ako smo pogodili povecavamo broj poena
 		case '1':
 			height1 = 0;
 			if(active1 == 0){
@@ -697,7 +717,8 @@ static void on_keyboard(unsigned char key, int x, int y){
 }
 
 static void on_display(void){
-
+	
+	//postavljanje osvetljenja koje prati trenutnu poziciju kamere
 	GLfloat light_position[] = { 10*sin(theta)+5, 40-20*camerap, 10*cos(theta)+5+5*sin(theta), 0 };
     GLfloat light_ambient[] = { 0.2, 0.2, 0.2, 1 };
     GLfloat light_diffuse[] = { 0.8, 0.8, 0.8, 1 };
@@ -721,6 +742,7 @@ static void on_display(void){
 	
 	glutTimerFunc(20, on_timer_camera, 0);
 	
+	//kamera sa animacijama za rotiranje i pocetnom animacijom
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     gluLookAt(
@@ -728,14 +750,8 @@ static void on_display(void){
 		5, 0, 5,
 		0, 1, 0
     );
-	
-	if(mistake)
-		glColor3f(1, 0, 0);
-	else if(levelup)
-		glColor3f(0, 1, 0);
-	else
-		glColor3f(0, 0.9, 1);
-	
+    
+	//crtanje stubova i skaliranje u odnosu na visinu
     glColor3f(0, 0, 1);
     glPushMatrix();
 		glTranslatef(1, 3, 1);
@@ -793,6 +809,7 @@ static void on_display(void){
 		glutSolidCube(2);
     glPopMatrix();
     
+    //crtanje postolja
     glColor3f(0.12, 0, 0);
     glPushMatrix();
     	glTranslatef(5,0,5);
@@ -800,6 +817,7 @@ static void on_display(void){
     	glutSolidCube(16);
     glPopMatrix();
     
+    //postavljanje teksture za postolje
     glBindTexture(GL_TEXTURE_2D, names[1]);
     glBegin(GL_QUADS);
         glNormal3f(0, 1, 0);
@@ -818,6 +836,7 @@ static void on_display(void){
     glEnd();
     glBindTexture(GL_TEXTURE_2D, 0);
 	
+	//postavljanje teksture za pozadinu
 	glBindTexture(GL_TEXTURE_2D, names[2]);
     
     glBegin(GL_QUADS);
@@ -836,6 +855,7 @@ static void on_display(void){
         glVertex3f(-200, 0, -200);
     glEnd();
     
+    //postavljanje teksture u slucaju greske
     if(mistake){
 		glBindTexture(GL_TEXTURE_2D, names[3]);
 		
@@ -856,6 +876,7 @@ static void on_display(void){
 		glEnd();
 	}
 	
+	//postavljanje teksture u slucaju prelaska na sledeci nivo
 	if(levelup){
 		glBindTexture(GL_TEXTURE_2D, names[4]);
 		

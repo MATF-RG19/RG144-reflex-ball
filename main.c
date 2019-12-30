@@ -3,11 +3,14 @@
 #include <stdlib.h>
 #include <time.h>
 #include <math.h>
-//#include <windows.h>
-//#include <windowsx.h>
-//#include <mmsystem.h>
+#include <unistd.h>
+#include "image.h"
 
 #define pi M_PI
+#define FILENAME0 "tex1.bmp"
+#define FILENAME1 "tex2.bmp"
+#define FILENAME2 "tex3.bmp"
+#define FILENAME3 "tex4.bmp"
 
 static int window_width, window_height;
 static int timer_active;
@@ -39,10 +42,111 @@ static float delta_theta;
 static int timer_rotate1_active;
 static int timer_rotate2_active;
 static int first_rotate_active;
+static int mistake;
+static int levelup;
+static float camerap;
+static GLuint names[5];
 
 static void on_reshape(int width, int height){
 	window_width = width;
 	window_height = height;
+}
+
+static void highscore(){
+	FILE * fp;
+	fp = fopen ("highscore.txt", "r+");
+	int hs;
+	fscanf(fp, "%d", &hs);
+	fclose(fp);
+	if(high_score > hs){
+		fp = fopen("highscore.txt", "w+");
+		fclose(fp);
+		fp = fopen("highscore.txt", "r+");
+		fprintf(fp, "%d", high_score);
+		fclose(fp);
+	}
+}
+
+static void initialize(void){
+    Image * image;
+
+    glEnable(GL_DEPTH_TEST);
+
+    glEnable(GL_TEXTURE_2D);
+
+    glTexEnvf(GL_TEXTURE_ENV,
+              GL_TEXTURE_ENV_MODE,
+              GL_REPLACE);
+
+    image = image_init(0, 0);
+	glGenTextures(5, names);
+    image_read(image, FILENAME0);
+
+    glBindTexture(GL_TEXTURE_2D, names[1]);
+    glTexParameteri(GL_TEXTURE_2D,
+                    GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D,
+                    GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB,
+                 image->width, image->height, 0,
+                 GL_RGB, GL_UNSIGNED_BYTE, image->pixels);
+	
+	image_read(image, FILENAME1);
+
+    glBindTexture(GL_TEXTURE_2D, names[2]);
+    glTexParameteri(GL_TEXTURE_2D,
+                    GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D,
+                    GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB,
+                 image->width, image->height, 0,
+                 GL_RGB, GL_UNSIGNED_BYTE, image->pixels);
+	
+	image_read(image, FILENAME2);
+
+    glBindTexture(GL_TEXTURE_2D, names[3]);
+    glTexParameteri(GL_TEXTURE_2D,
+                    GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D,
+                    GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB,
+                 image->width, image->height, 0,
+                 GL_RGB, GL_UNSIGNED_BYTE, image->pixels);
+    
+    image_read(image, FILENAME3);
+
+    glBindTexture(GL_TEXTURE_2D, names[4]);
+    glTexParameteri(GL_TEXTURE_2D,
+                    GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D,
+                    GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB,
+                 image->width, image->height, 0,
+                 GL_RGB, GL_UNSIGNED_BYTE, image->pixels);
+                 
+    glBindTexture(GL_TEXTURE_2D, 0);
+	
+    image_done(image);
+}
+
+static void on_timer_levelup(int value){
+	if(value != 0)
+		return;
+	levelup = 0;
+}
+
+static void on_timer_mistake(int value){
+	if(value != 0)
+		return;
+	mistake = 0;
 }
 
 static void on_timer_rotate(int value){
@@ -55,6 +159,17 @@ static void on_timer_rotate(int value){
 	glutPostRedisplay();
 	if(timer_rotate1_active == 1 || timer_rotate2_active == 1)
 		glutTimerFunc(50, on_timer_rotate, 0);
+}
+
+static void on_timer_camera(int value){
+	if(value != 0)
+		return;
+	camerap += 0.0005;
+	glutPostRedisplay();
+	if(camerap < 1)
+		glutTimerFunc(50, on_timer_camera, 0);
+	else
+		camerap = 1;
 }
 
 static void on_timer(int value){
@@ -72,18 +187,34 @@ static void on_timer(int value){
 		for(i=0; i<5; i++)
 			printf("\n");
 		printf("Igra je zavrsena!\n");
-		printf("HIGH SCORE: %d\n", high_score);
-		printf("POINTER: %d\n", pointer);
+		printf("High-score: %d\n", high_score);
+		printf("Nivo: %d\n", pointer+1);
+		if(score > high_score)
+			high_score = score;
+		highscore();
 		exit(0);
 	}
 	
-	if(score > (pointer+1)*10 && pointer != 6)
+	if(score > (pointer+1)*10 && pointer != 6){
 		pointer++;
+		levelup = 1;
+		glutPostRedisplay();
+	}
 	
 	if(pointer >= 1 && first_rotate_active == 0){
 		timer_rotate1_active = 1;
 		first_rotate_active = 1;
 		glutTimerFunc(50, on_timer_rotate, 0);
+	}
+	
+	if(levelup){
+		glutPostRedisplay();
+		glutTimerFunc(500, on_timer_levelup, 0);
+	}
+	
+	if(mistake){
+		glutPostRedisplay();
+		glutTimerFunc(500, on_timer_mistake, 0);
 	}
 	
 	if(timer_rotate1_active && switcher == 0){
@@ -170,7 +301,9 @@ static void on_timer(int value){
 		if(score > high_score)
 			high_score = score;
 		score -= 10;
-		pointer--;
+		if(pointer != 0)
+			pointer--;
+		mistake = 1;
 		printf("Broj zivota: %d\n", life);
 	}
 	if(height2 == 6){
@@ -180,7 +313,9 @@ static void on_timer(int value){
 		if(score > high_score)
 			high_score = score;
 		score -= 10;
-		pointer--;
+		if(pointer != 0)
+			pointer--;
+		mistake = 1;
 		printf("Broj zivota: %d\n", life);
 	}
 	if(height3 == 6){
@@ -190,7 +325,9 @@ static void on_timer(int value){
 		if(score > high_score)
 			high_score = score;
 		score -= 10;
-		pointer--;
+		if(pointer != 0)
+			pointer--;
+		mistake = 1;
 		printf("Broj zivota: %d\n", life);
 	}
 	if(height4 == 6){
@@ -200,7 +337,9 @@ static void on_timer(int value){
 		if(score > high_score)
 			high_score = score;
 		score -= 10;
-		pointer--;
+		if(pointer != 0)
+			pointer--;
+		mistake = 1;
 		printf("Broj zivota: %d\n", life);
 	}
 	if(height5 == 6){
@@ -210,7 +349,9 @@ static void on_timer(int value){
 		if(score > high_score)
 			high_score = score;
 		score -= 10;
-		pointer--;
+		if(pointer != 0)
+			pointer--;
+		mistake = 1;
 		printf("Broj zivota: %d\n", life);
 	}
 	if(height6 == 6){
@@ -220,7 +361,9 @@ static void on_timer(int value){
 		if(score > high_score)
 			high_score = score;
 		score -= 10;
-		pointer--;
+		if(pointer != 0)
+			pointer--;
+		mistake = 1;
 		printf("Broj zivota: %d\n", life);
 	}
 	if(height7 == 6){
@@ -230,7 +373,9 @@ static void on_timer(int value){
 		if(score > high_score)
 			high_score = score;
 		score -= 10;
-		pointer--;
+		if(pointer != 0)
+			pointer--;
+		mistake = 1;
 		printf("Broj zivota: %d\n", life);
 	}
 	if(height8 == 6){
@@ -240,7 +385,9 @@ static void on_timer(int value){
 		if(score > high_score)
 			high_score = score;
 		score -= 10;
-		pointer--;
+		if(pointer != 0)
+			pointer--;
+		mistake = 1;
 		printf("Broj zivota: %d\n", life);
 	}
 	if(height9 == 6){
@@ -250,7 +397,9 @@ static void on_timer(int value){
 		if(score > high_score)
 			high_score = score;
 		score -= 10;
-		pointer--;
+		if(pointer != 0)
+			pointer--;
+		mistake = 1;
 		printf("Broj zivota: %d\n", life);
 	}
 	
@@ -259,8 +408,11 @@ static void on_timer(int value){
 		for(i=0; i<5; i++)
 			printf("\n");
 		printf("Igra je zavrsena!\n");
-		printf("HIGH SCORE: %d\n", high_score);
-		printf("POINTER: %d\n", pointer);
+		printf("High-score: %d\n", high_score);
+		printf("Nivo: %d\n", pointer+1);
+		if(score > high_score)
+			high_score = score;
+		highscore();
 		exit(0);
 	}
 	
@@ -273,18 +425,19 @@ static void on_timer(int value){
 static void on_keyboard(unsigned char key, int x, int y){
 	switch(key){
 		case 27:
+			highscore();
 			exit(0);
 			break;
-		case 's':
-		case 'S':
+		case 'g':
+		case 'G':
 			if(!timer_active){
 				timer_active = 1;
 				glutTimerFunc(level[pointer], on_timer, 0);
 			}
 			glutPostRedisplay();
 			break;
-		case 'p':
-		case 'P':
+		case 's':
+		case 'S':
 			timer_active = 0;
 			glutPostRedisplay();
 			break;
@@ -293,10 +446,21 @@ static void on_keyboard(unsigned char key, int x, int y){
 			if(active1 == 0){
 				life--;
 				printf("Broj zivota: %d\n", life);
+				if(life <= 0){
+					printf("\n\n\n\n\nIgra je zavrsena!\n");
+					printf("High-score: %d\n", high_score);
+					printf("Nivo: %d\n", pointer+1);
+					if(score > high_score)
+						high_score = score;
+					highscore();
+   					exit(0);
+				}
 				if(score > high_score)
 					high_score = score;
 				score -= 10;
-				pointer--;
+				if(pointer != 0)
+					pointer--;
+				mistake = 1;
 			}
 			else{
 				score++;
@@ -310,10 +474,21 @@ static void on_keyboard(unsigned char key, int x, int y){
 			if(active2 == 0){
 				life--;
 				printf("Broj zivota: %d\n", life);
+				if(life <= 0){
+					printf("\n\n\n\n\nIgra je zavrsena!\n");
+					printf("High-score: %d\n", high_score);
+					printf("Nivo: %d\n", pointer+1);
+					if(score > high_score)
+						high_score = score;
+					highscore();
+					exit(0);
+				}
 				if(score > high_score)
 					high_score = score;
 				score -= 10;
-				pointer--;
+				if(pointer != 0)
+					pointer--;
+				mistake = 1;
 			}
 			else{
 				score++;
@@ -327,10 +502,21 @@ static void on_keyboard(unsigned char key, int x, int y){
 			if(active3 == 0){
 				life--;
 				printf("Broj zivota: %d\n", life);
+				if(life <= 0){
+					printf("\n\n\n\n\nIgra je zavrsena!\n");
+					printf("High-score: %d\n", high_score);
+					printf("Nivo: %d\n", pointer+1);
+					if(score > high_score)
+						high_score = score;
+					highscore();
+					exit(0);
+				}
 				if(score > high_score)
 					high_score = score;
 				score -= 10;
-				pointer--;
+				if(pointer != 0)
+					pointer--;
+				mistake = 1;
 			}
 			else{
 				score++;
@@ -344,10 +530,21 @@ static void on_keyboard(unsigned char key, int x, int y){
 			if(active4 == 0){
 				life--;
 				printf("Broj zivota: %d\n", life);
+				if(life <= 0){
+					printf("\n\n\n\n\nIgra je zavrsena!\n");
+					printf("High-score: %d\n", high_score);
+					printf("Nivo: %d\n", pointer+1);
+					if(score > high_score)
+						high_score = score;
+					highscore();
+					exit(0);
+				}
 				if(score > high_score)
 					high_score = score;
 				score -= 10;
-				pointer--;
+				if(pointer != 0)
+					pointer--;
+				mistake = 1;
 			}
 			else{
 				score++;
@@ -361,10 +558,21 @@ static void on_keyboard(unsigned char key, int x, int y){
 			if(active5 == 0){
 				life--;
 				printf("Broj zivota: %d\n", life);
+				if(life <= 0){
+					printf("\n\n\n\n\nIgra je zavrsena!\n");
+					printf("High-score: %d\n", high_score);
+					printf("Nivo: %d\n", pointer+1);
+					if(score > high_score)
+						high_score = score;
+					highscore();
+					exit(0);
+				}
 				if(score > high_score)
 					high_score = score;
 				score -= 10;
-				pointer--;
+				if(pointer != 0)
+					pointer--;
+				mistake = 1;
 			}
 			else{
 				score++;
@@ -378,10 +586,21 @@ static void on_keyboard(unsigned char key, int x, int y){
 			if(active6 == 0){
 				life--;
 				printf("Broj zivota: %d\n", life);
+				if(life <= 0){
+					printf("\n\n\n\n\nIgra je zavrsena!\n");
+					printf("High-score: %d\n", high_score);
+					printf("Nivo: %d\n", pointer+1);
+					if(score > high_score)
+						high_score = score;
+					highscore();
+					exit(0);
+				}
 				if(score > high_score)
 					high_score = score;
 				score -= 10;
-				pointer--;
+				if(pointer != 0)
+					pointer--;
+				mistake = 1;
 			}
 			else{
 				score++;
@@ -395,10 +614,21 @@ static void on_keyboard(unsigned char key, int x, int y){
 			if(active7 == 0){
 				life--;
 				printf("Broj zivota: %d\n", life);
+				if(life <= 0){
+					printf("\n\n\n\n\nIgra je zavrsena!\n");
+					printf("High-score: %d\n", high_score);
+					printf("Nivo: %d\n", pointer+1);
+					if(score > high_score)
+						high_score = score;
+					highscore();
+					exit(0);
+				}
 				if(score > high_score)
 					high_score = score;
 				score -= 10;
-				pointer--;
+				if(pointer != 0)
+					pointer--;
+				mistake = 1;
 			}
 			else{
 				score++;
@@ -412,10 +642,21 @@ static void on_keyboard(unsigned char key, int x, int y){
 			if(active8 == 0){
 				life--;
 				printf("Broj zivota: %d\n", life);
+				if(life <= 0){
+					printf("\n\n\n\n\nIgra je zavrsena!\n");
+					printf("High-score: %d\n", high_score);
+					printf("Nivo: %d\n", pointer+1);
+					if(score > high_score)
+						high_score = score;
+					highscore();
+					exit(0);
+				}
 				if(score > high_score)
 					high_score = score;
 				score -= 10;
-				pointer--;
+				if(pointer != 0)
+					pointer--;
+				mistake = 1;
 			}
 			else{
 				score++;
@@ -429,10 +670,21 @@ static void on_keyboard(unsigned char key, int x, int y){
 			if(active9 == 0){
 				life--;
 				printf("Broj zivota: %d\n", life);
+				if(life <= 0){
+					printf("\n\n\n\n\nIgra je zavrsena!\n");
+					printf("High-score: %d\n", high_score);
+					printf("Nivo: %d\n", pointer+1);
+					if(score > high_score)
+						high_score = score;
+					highscore();
+					exit(0);
+				}
 				if(score > high_score)
 					high_score = score;
 				score -= 10;
-				pointer--;
+				if(pointer != 0)
+					pointer--;
+				mistake = 1;
 			}
 			else{
 				score++;
@@ -446,21 +698,17 @@ static void on_keyboard(unsigned char key, int x, int y){
 
 static void on_display(void){
 
-	GLfloat light_position[] = { 12, 30, 26, 0 };
+	GLfloat light_position[] = { 10*sin(theta)+5, 40-20*camerap, 10*cos(theta)+5+5*sin(theta), 0 };
     GLfloat light_ambient[] = { 0.2, 0.2, 0.2, 1 };
     GLfloat light_diffuse[] = { 0.8, 0.8, 0.8, 1 };
+    GLfloat light_specular[] = { 0.2, 0.2, 0.2, 1 };
     
     glEnable(GL_LIGHTING);
     glEnable(GL_LIGHT0);
     glLightfv(GL_LIGHT0, GL_POSITION, light_position);
     glLightfv(GL_LIGHT0, GL_AMBIENT, light_ambient);
     glLightfv(GL_LIGHT0, GL_DIFFUSE, light_diffuse);
-    
-    GLfloat ambient_coeffs[] = { 1.0, 1.0, 1.0, 1 };
-    GLfloat diffuse_coeffs[] = { 1.0, 1.0, 1.0, 1 };
-    
-    glMaterialfv(GL_FRONT, GL_AMBIENT, ambient_coeffs);
-    glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuse_coeffs);
+    glLightfv(GL_LIGHT0, GL_SPECULAR, light_specular);
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glViewport(0, 0, window_width, window_height);
@@ -469,51 +717,24 @@ static void on_display(void){
     gluPerspective(
             60,
             window_width/(float)window_height,
-            1, 50);
-
+            1, 150);
+	
+	glutTimerFunc(20, on_timer_camera, 0);
+	
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     gluLookAt(
-		10*sin(theta)+5, 20, 10*cos(theta)+5,
+		10*sin(theta)+5, 40-20*camerap, 10*cos(theta)+5+5*sin(theta),
 		5, 0, 5,
 		0, 1, 0
     );
 	
-	/*glColor3f(0, 1, 0);
-	glBegin(GL_LINES);
-		glVertex3f(0, 0, 0);
-		glVertex3f(20, 0, 0);
-	glEnd();
-	glColor3f(1, 0, 0);
-	glBegin(GL_LINES);
-		glVertex3f(0, 0, 0);
-		glVertex3f(0, 20, 0);
-	glEnd();
-	glColor3f(0, 1, 1);
-	glBegin(GL_LINES);
-		glVertex3f(0, 0, 0);
-		glVertex3f(0, 0, 20);
-	glEnd();*/
-	
-	GLfloat ambient_coeffs0[] = { 0.3, 0.3, 0.3, 1 };
-    GLfloat diffuse_coeffs0[] = { 0.3, 0.3, 0.3, 1 };
-    
-    glMaterialfv(GL_FRONT, GL_AMBIENT, ambient_coeffs0);
-    glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuse_coeffs0);
-	
-	glColor3f(1, 0, 0);
-	glBegin(GL_POLYGON);
-    	glVertex3f(-40, 0, -40);
-    	glVertex3f(-40, 0, 40);
-    	glVertex3f(40, 0, 40);
-    	glVertex3f(40, 0, -40);
-    glEnd();
-	
-	GLfloat ambient_coeffs1[] = { 0.0, 0.0, 1.0, 1 };
-    GLfloat diffuse_coeffs1[] = { 0.0, 0.0, 1.0, 1 };
-    
-    glMaterialfv(GL_FRONT, GL_AMBIENT, ambient_coeffs1);
-    glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuse_coeffs1);
+	if(mistake)
+		glColor3f(1, 0, 0);
+	else if(levelup)
+		glColor3f(0, 1, 0);
+	else
+		glColor3f(0, 0.9, 1);
 	
     glColor3f(0, 0, 1);
     glPushMatrix();
@@ -534,13 +755,7 @@ static void on_display(void){
 		glutSolidCube(2);
 	glPopMatrix();
 	
-	GLfloat ambient_coeffs2[] = { 0.0, 1.0, 1.0, 1 };
-    GLfloat diffuse_coeffs2[] = { 0.0, 1.0, 1.0, 1 };
-    
-    glMaterialfv(GL_FRONT, GL_AMBIENT, ambient_coeffs2);
-    glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuse_coeffs2);
-	
-    glColor3f(0, 1, 1);
+    glColor3f(1, 1, 0);
     glPushMatrix();
 		glTranslatef(1, 3, 5);
 		glScalef(1, height4+3, 1);
@@ -559,13 +774,7 @@ static void on_display(void){
 		glutSolidCube(2);
     glPopMatrix();
 	
-	GLfloat ambient_coeffs3[] = { 1.0, 0.0, 1.0, 1 };
-    GLfloat diffuse_coeffs3[] = { 1.0, 0.0, 1.0, 1 };
-    
-    glMaterialfv(GL_FRONT, GL_AMBIENT, ambient_coeffs3);
-    glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuse_coeffs3);
-	
-	glColor3f(1, 1, 0);
+	glColor3f(0, 1, 0);
 	glPushMatrix();
 		glTranslatef(1, 3, 9);
 		glScalef(1, height1+3, 1);
@@ -584,6 +793,90 @@ static void on_display(void){
 		glutSolidCube(2);
     glPopMatrix();
     
+    glColor3f(0.12, 0, 0);
+    glPushMatrix();
+    	glTranslatef(5,0,5);
+    	glScalef(1,0.4,1);
+    	glutSolidCube(16);
+    glPopMatrix();
+    
+    glBindTexture(GL_TEXTURE_2D, names[1]);
+    glBegin(GL_QUADS);
+        glNormal3f(0, 1, 0);
+
+        glTexCoord2f(0.1, 0.1);
+        glVertex3f(-3, 3.21, 13);
+
+        glTexCoord2f(1, 0.1);
+        glVertex3f(13, 3.21, 13);
+
+        glTexCoord2f(1, 1);
+        glVertex3f(13, 3.21, -3);
+
+        glTexCoord2f(0.1, 1);
+        glVertex3f(-3, 3.21, -3);
+    glEnd();
+    glBindTexture(GL_TEXTURE_2D, 0);
+	
+	glBindTexture(GL_TEXTURE_2D, names[2]);
+    
+    glBegin(GL_QUADS);
+        glNormal3f(0, 1, 0);
+
+        glTexCoord2f(0, 0);
+        glVertex3f(-200, 0, 200);
+
+        glTexCoord2f(20, 0);
+        glVertex3f(200, 0, 200);
+
+        glTexCoord2f(20, 20);
+        glVertex3f(200, 0, -200);
+
+        glTexCoord2f(0, 20);
+        glVertex3f(-200, 0, -200);
+    glEnd();
+    
+    if(mistake){
+		glBindTexture(GL_TEXTURE_2D, names[3]);
+		
+		glBegin(GL_QUADS);
+		    glNormal3f(0, 1, 0);
+
+		    glTexCoord2f(0, 0);
+		    glVertex3f(-200, 0.1, 200);
+
+		    glTexCoord2f(20, 0);
+		    glVertex3f(200, 0.1, 200);
+
+		    glTexCoord2f(20, 20);
+		    glVertex3f(200, 0.1, -200);
+
+		    glTexCoord2f(0, 20);
+		    glVertex3f(-200, 0.1, -200);
+		glEnd();
+	}
+	
+	if(levelup){
+		glBindTexture(GL_TEXTURE_2D, names[4]);
+		
+		glBegin(GL_QUADS);
+		    glNormal3f(0, 1, 0);
+
+		    glTexCoord2f(0, 0);
+		    glVertex3f(-200, 0.1, 200);
+
+		    glTexCoord2f(20, 0);
+		    glVertex3f(200, 0.1, 200);
+
+		    glTexCoord2f(20, 20);
+		    glVertex3f(200, 0.1, -200);
+
+		    glTexCoord2f(0, 20);
+		    glVertex3f(-200, 0.1, -200);
+		glEnd();
+	}
+    glBindTexture(GL_TEXTURE_2D, 0);
+    
 	glutSwapBuffers();
 }
 
@@ -593,11 +886,15 @@ int main(int argc, char** argv){
 	glutInitWindowSize(800,800);
 	glutInitWindowPosition(100,100);
 	glutCreateWindow(argv[0]);
+	glutFullScreen();
 	
 	timer_active = 0;
 	timer_rotate1_active = 0;
 	timer_rotate2_active = 0;
 	first_rotate_active = 0;
+	camerap = 0;
+	mistake = 0;
+	levelup = 0;
 	height1 = 0;
 	height2 = 0;
 	height3 = 0;
@@ -610,15 +907,17 @@ int main(int argc, char** argv){
 	score = 0;
 	high_score = 0;
 	pointer = 0;
-	theta = 0.0001;
+	theta = 0;
 	delta_theta = pi / 90;
-	level[0] = 2000;
-	level[1] = 1500;
-	level[2] = 1200;
-	level[3] = 1000;
-	level[4] = 800;
-	level[5] = 500;
-	level[6] = 330;
+	level[0] = 1200;
+	level[1] = 1000;
+	level[2] = 800;
+	level[3] = 600;
+	level[4] = 500;
+	level[5] = 400;
+	level[6] = 350;
+	
+	glEnable(GL_COLOR_MATERIAL);
 	
 	glutDisplayFunc(on_display);
 	glutReshapeFunc(on_reshape);
@@ -627,8 +926,7 @@ int main(int argc, char** argv){
 	glEnable(GL_DEPTH_TEST);
 	glLineWidth(3);
 	life = 3;
-	printf("Lives remaining: %d\n",life);
-	printf("SCORE: %d\n",score);
+	initialize();
 	glutMainLoop();
 	return 0;
 }

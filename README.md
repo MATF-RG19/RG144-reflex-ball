@@ -1,7 +1,7 @@
 # RG144-reflex-ball
 ## Testiraj svoje reflekse
 
-_Pritiskom na tastere od 1-9 se spustaju odredjeni stubovi._
+_Stubovi se podizu vremenom a zadatak igraca je da pritiskom na odgovarajuci taster spusti podignuti stub._
 
 ## Kontrole
 
